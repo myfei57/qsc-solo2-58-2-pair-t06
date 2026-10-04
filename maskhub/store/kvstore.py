@@ -104,6 +104,36 @@ class RecordStore:
         with self._lock:
             yield self._data
 
+    def put_json_batch(self, items: dict[str, Any], deletes: tuple[str, ...] = ()) -> None:
+        """Apply several writes/deletes atomically (all-or-nothing under the lock)."""
+
+        names = [validate_key(key) for key in tuple(items) + tuple(deletes)]
+        with self._lock:
+            snapshot = {name: self._data.get(name) for name in names}
+            try:
+                for name, value in zip((validate_key(k) for k in tuple(items)), items.values()):
+                    self._write(name, encode(value))
+                for raw in deletes:
+                    name = validate_key(raw)
+                    self._data.pop(name, None)
+                    try:
+                        self._path_for(name).unlink()
+                    except FileNotFoundError:
+                        pass
+            except Exception:
+                # Roll back every touched key so a failed commit leaves no
+                # partial state behind.
+                for name, raw in snapshot.items():
+                    if raw is None:
+                        self._data.pop(name, None)
+                        try:
+                            self._path_for(name).unlink()
+                        except FileNotFoundError:
+                            pass
+                    else:
+                        self._write(name, raw)
+                raise
+
     def _path_for(self, key: str) -> Path:
         return self._dir / f"{key}{SUFFIX}"
 
