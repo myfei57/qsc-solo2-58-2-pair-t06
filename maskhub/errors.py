@@ -11,6 +11,10 @@ class NotFound(MaskHubError):
     """Raised when a referenced object does not exist."""
 
 
+class Gone(MaskHubError):
+    """Raised when a referenced object existed but was permanently removed."""
+
+
 class Conflict(MaskHubError):
     """Raised when an operation conflicts with current state."""
 

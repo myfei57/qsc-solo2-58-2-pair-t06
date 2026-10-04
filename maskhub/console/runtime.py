@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from maskhub.audit.journal import Journal
 from maskhub.catalog.dataset import DatasetRegistry
+from maskhub.keyring.registry import KeyRegistry
 from maskhub.policy.registry import PolicyRegistry
 from maskhub.rule.registry import RuleRegistry
 from maskhub.source.registry import SourceRegistry
@@ -20,6 +21,7 @@ class Runtime:
     datasets: DatasetRegistry
     rules: RuleRegistry
     policies: PolicyRegistry
+    keyring: KeyRegistry
 
 
 def build_runtime(store: RecordStore) -> Runtime:
@@ -30,4 +32,5 @@ def build_runtime(store: RecordStore) -> Runtime:
         datasets=DatasetRegistry(store),
         rules=RuleRegistry(store),
         policies=PolicyRegistry(store),
+        keyring=KeyRegistry(store),
     )
